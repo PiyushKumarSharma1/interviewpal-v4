@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InterviewPal</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Resume-driven interview prep</p>
+          <h1>InterviewPal</h1>
+          <p class="lede">
+            Turn your resume into a sharper interview story, targeted mock questions,
+            and a practical warm-up plan for each role you apply to.
+          </p>
+        </div>
+        <div class="hero-panel" id="profile-card">
+          <p class="muted">Loading profile...</p>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel panel-form">
+          <div class="panel-heading">
+            <p class="eyebrow">Prep session</p>
+            <h2>Build a targeted interview brief</h2>
+          </div>
+
+          <form id="prep-form">
+            <label>
+              Target role
+              <input
+                id="role"
+                name="role"
+                type="text"
+                placeholder="Software Engineer Intern"
+                value="Software Engineer Intern"
+              />
+            </label>
+
+            <label>
+              Company
+              <input
+                id="company"
+                name="company"
+                type="text"
+                placeholder="OpenAI"
+              />
+            </label>
+
+            <label>
+              Focus area
+              <input
+                id="focusArea"
+                name="focusArea"
+                type="text"
+                placeholder="Behavioral and project storytelling"
+                value="Behavioral and project storytelling"
+              />
+            </label>
+
+            <button type="submit" id="submit-button">Generate prep</button>
+          </form>
+
+          <div class="status" id="status">
+            Demo mode is ready. Add `OPENAI_API_KEY` and `OPENAI_MODEL` to use AI generation.
+          </div>
+        </section>
+
+        <section class="panel panel-results">
+          <div class="panel-heading">
+            <p class="eyebrow">Interview brief</p>
+            <h2>Your personalized prep pack</h2>
+          </div>
+          <div id="results" class="results">
+            <div class="empty-state">
+              <p>Generate a prep brief to see your pitch, gaps, mock questions, and warm-up drills.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
+

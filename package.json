@@ -1,0 +1,10 @@
+{
+  "name": "interviewpal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "InterviewPal - a resume-driven interview preparation workspace.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
+
