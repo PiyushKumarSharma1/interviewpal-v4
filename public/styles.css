@@ -331,9 +331,29 @@ button.danger {
 }
 
 button:disabled,
-input:disabled {
+input:disabled,
+select:disabled,
+textarea:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+button.is-loading {
+  position: relative;
+  filter: saturate(0.9);
+}
+
+button.is-loading::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  display: inline-block;
+  vertical-align: -2px;
+  animation: spin 0.9s linear infinite;
 }
 
 .auth-actions {
@@ -414,6 +434,11 @@ input:disabled {
 
 .message.assistant {
   border-color: rgba(156, 255, 203, 0.24);
+}
+
+.message.pending {
+  opacity: 0.82;
+  border-style: dashed;
 }
 
 .message-label,
@@ -623,6 +648,31 @@ input:disabled {
   border-radius: 18px;
   border: 1px dashed var(--line);
   color: var(--muted);
+}
+
+.empty-state.loading {
+  border-style: solid;
+  background: rgba(101, 209, 255, 0.04);
+}
+
+.empty-state.error {
+  border-color: rgba(255, 141, 141, 0.34);
+  background: rgba(255, 141, 141, 0.05);
+  color: #ffd1d1;
+}
+
+body[data-view-state="loading"] .results-panel {
+  border-color: rgba(101, 209, 255, 0.28);
+}
+
+body[data-view-state="fallback-used"] .results-panel {
+  border-color: rgba(255, 196, 122, 0.24);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .lede.small,

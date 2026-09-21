@@ -4,7 +4,13 @@ const state = {
   defaultProfile: null,
   sessionCandidateProfile: null,
   sessionCandidateProfileId: "",
-  currentAnalysis: null
+  currentAnalysis: null,
+  ui: {
+    view: "idle",
+    busy: false,
+    busyContext: "",
+    pendingAssistantNode: null
+  }
 };
 
 const els = {
@@ -33,6 +39,7 @@ const els = {
   assistantThread: document.getElementById("assistant-thread"),
   assistantForm: document.getElementById("assistant-form"),
   assistantMessage: document.getElementById("assistant-message"),
+  assistantSubmit: document.getElementById("assistant-submit"),
   assistantUseSessionProfile: document.getElementById("assistant-use-session-profile"),
   assistantForceRefresh: document.getElementById("assistant-force-refresh"),
   assistantSave: document.getElementById("assistant-save"),
@@ -45,6 +52,7 @@ const els = {
   resumeJobUrl: document.getElementById("resume-job-url"),
   resumeForceRefresh: document.getElementById("resume-force-refresh"),
   resumeSave: document.getElementById("resume-save"),
+  resumeSubmit: document.getElementById("resume-submit"),
   jobsForm: document.getElementById("jobs-form"),
   jobsRole: document.getElementById("jobs-role"),
   jobsCompany: document.getElementById("jobs-company"),
@@ -53,6 +61,7 @@ const els = {
   jobsUseSessionProfile: document.getElementById("jobs-use-session-profile"),
   jobsForceRefresh: document.getElementById("jobs-force-refresh"),
   jobsSave: document.getElementById("jobs-save"),
+  jobsSubmit: document.getElementById("jobs-submit"),
   prepForm: document.getElementById("prep-form"),
   prepRole: document.getElementById("prep-role"),
   prepCompany: document.getElementById("prep-company"),
@@ -62,6 +71,7 @@ const els = {
   prepUseSessionProfile: document.getElementById("use-session-profile"),
   prepForceRefresh: document.getElementById("prep-force-refresh"),
   prepSave: document.getElementById("prep-save"),
+  prepSubmit: document.getElementById("prep-submit"),
   sessionNote: document.getElementById("session-note"),
   savedProfiles: document.getElementById("saved-profiles"),
   savedSearches: document.getElementById("saved-searches"),
@@ -128,6 +138,160 @@ function getAdvancedProvider() {
 function setStatus(message, variant = "") {
   els.status.className = variant ? `status ${variant}` : "status";
   els.status.textContent = message;
+}
+
+function setViewState(view) {
+  state.ui.view = view;
+  document.body.dataset.viewState = view;
+}
+
+function getBusyControls() {
+  return [
+    els.assistantMessage,
+    els.assistantSubmit,
+    els.assistantUseSessionProfile,
+    els.assistantForceRefresh,
+    els.assistantSave,
+    ...Array.from(els.quickPrompts.querySelectorAll("button")),
+    els.resumeInput,
+    els.resumeRole,
+    els.resumeCompany,
+    els.resumeLocation,
+    els.resumeJobUrl,
+    els.resumeForceRefresh,
+    els.resumeSave,
+    els.resumeSubmit,
+    els.jobsRole,
+    els.jobsCompany,
+    els.jobsLocation,
+    els.jobsJobUrl,
+    els.jobsUseSessionProfile,
+    els.jobsForceRefresh,
+    els.jobsSave,
+    els.jobsSubmit,
+    els.prepRole,
+    els.prepCompany,
+    els.prepLocation,
+    els.prepJobUrl,
+    els.prepFocusArea,
+    els.prepUseSessionProfile,
+    els.prepForceRefresh,
+    els.prepSave,
+    els.prepSubmit,
+    els.downloadPdf,
+    els.downloadJson,
+    els.saveReport
+  ].filter(Boolean);
+}
+
+function setButtonBusy(button, busy, busyLabel = "Working...") {
+  if (!button) {
+    return;
+  }
+
+  if (!button.dataset.defaultLabel) {
+    button.dataset.defaultLabel = button.textContent;
+  }
+
+  button.disabled = Boolean(busy);
+  button.classList.toggle("is-loading", Boolean(busy));
+  button.textContent = busy ? busyLabel : button.dataset.defaultLabel;
+}
+
+function syncBusyUi() {
+  const busy = state.ui.busy;
+  const busyControls = getBusyControls();
+
+  for (const control of busyControls) {
+    if (control?.dataset?.allowInteractive === "true") {
+      continue;
+    }
+
+    if (control && control !== state.ui.activeButton) {
+      control.disabled = busy;
+    }
+  }
+
+  setButtonBusy(
+    els.assistantSubmit,
+    busy && state.ui.busyContext === "assistant",
+    state.ui.busyLabel || "Thinking..."
+  );
+  setButtonBusy(
+    els.resumeSubmit,
+    busy && state.ui.busyContext === "resume",
+    state.ui.busyLabel || "Analyzing..."
+  );
+  setButtonBusy(
+    els.jobsSubmit,
+    busy && state.ui.busyContext === "jobs",
+    state.ui.busyLabel || "Searching..."
+  );
+  setButtonBusy(
+    els.prepSubmit,
+    busy && state.ui.busyContext === "prep",
+    state.ui.busyLabel || "Preparing..."
+  );
+  setButtonBusy(
+    els.downloadPdf,
+    busy && state.ui.busyContext === "report-pdf",
+    state.ui.busyLabel || "Preparing PDF..."
+  );
+  setButtonBusy(
+    els.downloadJson,
+    busy && state.ui.busyContext === "report-json",
+    state.ui.busyLabel || "Preparing JSON..."
+  );
+  setButtonBusy(
+    els.saveReport,
+    busy && state.ui.busyContext === "report-save",
+    state.ui.busyLabel || "Saving report..."
+  );
+
+  for (const button of els.quickPrompts.querySelectorAll("button")) {
+    const busyForButton = busy && state.ui.busyContext === "assistant" && state.ui.activeButton === button;
+    setButtonBusy(button, busyForButton, state.ui.busyLabel || "Running...");
+    if (!busyForButton) {
+      button.disabled = busy;
+    }
+  }
+}
+
+function beginBusy(context, busyLabel, activeButton = null) {
+  state.ui.busy = true;
+  state.ui.busyContext = context;
+  state.ui.busyLabel = busyLabel;
+  state.ui.activeButton = activeButton;
+  setViewState("loading");
+  syncBusyUi();
+}
+
+function endBusy(nextView = state.currentAnalysis ? "success" : "idle") {
+  state.ui.busy = false;
+  state.ui.busyContext = "";
+  state.ui.busyLabel = "";
+  state.ui.activeButton = null;
+  setViewState(nextView);
+  syncBusyUi();
+}
+
+function renderResultsState(title, body, variant = "empty") {
+  setViewState(
+    variant === "loading"
+      ? "loading"
+      : variant === "error"
+        ? "validation-error"
+        : variant === "fallback"
+          ? "fallback-used"
+          : "empty"
+  );
+  els.actionBar.classList.add("hidden");
+  els.results.innerHTML = `
+    <section class="empty-state ${escapeHtml(variant)}">
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(body)}</p>
+    </section>
+  `;
 }
 
 async function apiFetch(url, options = {}) {
@@ -233,6 +397,21 @@ function appendThreadMessage(role, text, badges = []) {
 
   els.assistantThread.appendChild(article);
   els.assistantThread.scrollTop = els.assistantThread.scrollHeight;
+  return article;
+}
+
+function appendPendingAssistantMessage(text = "mygpt is working on this request...") {
+  const node = appendThreadMessage("assistant", text, ["mygpt local"]);
+  node.classList.add("pending");
+  state.ui.pendingAssistantNode = node;
+  return node;
+}
+
+function clearPendingAssistantMessage() {
+  if (state.ui.pendingAssistantNode?.parentNode) {
+    state.ui.pendingAssistantNode.parentNode.removeChild(state.ui.pendingAssistantNode);
+  }
+  state.ui.pendingAssistantNode = null;
 }
 
 function uniqueQuestions(analysis) {
@@ -322,7 +501,7 @@ function renderQuestionCards(questions) {
 function renderJobCards(jobs) {
   const list = Array.isArray(jobs) ? jobs : [];
   if (!list.length) {
-    return '<div class="muted-row">No live openings were attached to this result yet.</div>';
+    return '<div class="muted-row">No live openings were attached to this result yet. Try force refresh, widen the location, or upload a resume so ranking can target your current profile.</div>';
   }
 
   return list.slice(0, 8).map((job) => `
@@ -349,8 +528,12 @@ function renderAnalysis(analysis) {
   if (analysis?.candidate) {
     state.sessionCandidateProfile = analysis.candidate;
   }
+  if (analysis?.savedProfileId) {
+    state.sessionCandidateProfileId = analysis.savedProfileId;
+  }
   updateSessionNote();
   renderProfileSnapshot(analysis?.candidate || state.defaultProfile, analysis?.candidate ? "Active session profile" : "Default candidate snapshot");
+  setViewState(analysis?.metadata?.fallbackUsed ? "fallback-used" : "success");
 
   const badges = analysis?.metadata?.userVisibleBadges || computeBadges(analysis);
   const questions = uniqueQuestions(analysis);
@@ -396,6 +579,7 @@ function renderAnalysis(analysis) {
       <p>${escapeHtml(analysis?.summary?.pitch || analysis?.summary?.reportSummary || "mygpt combines deterministic scoring with local generation and safe fallbacks.")}</p>
       ${analysis?.summary?.topRisk ? `<div class="warning-strip">Top risk: ${escapeHtml(analysis.summary.topRisk)}</div>` : ""}
       <div class="target-highlight">
+        Generated ${escapeHtml(formatDateTime(analysis?.metadata?.retrievedAt || "")) || "just now"} •
         Freshness: jobs ${escapeHtml(formatDateTime(analysis?.metadata?.sourceFreshness?.jobs || analysis?.metadata?.jobsRetrievedAt || analysis?.metadata?.retrievedAt || "")) || "not available"} •
         company ${escapeHtml(formatDateTime(analysis?.metadata?.sourceFreshness?.company || analysis?.metadata?.retrievedAt || "")) || "not available"} •
         company context ${escapeHtml(contextMode)}
@@ -536,6 +720,10 @@ function renderAnalysis(analysis) {
             <strong>Workspace note</strong>
             <p>${escapeHtml(analysis?.metadata?.note || "Structured analysis is ready for secure saving or export.")}</p>
           </div>
+          <div class="list-row">
+            <strong>Guest-first access</strong>
+            <p>${escapeHtml(state.user ? "Signed in. You can save or reopen this analysis in your secure workspace." : "You can use jobs, prep, and resume analysis without signing in. Sign in only when you want to save or export workspace items.")}</p>
+          </div>
         </div>
       </section>
     </div>
@@ -543,6 +731,8 @@ function renderAnalysis(analysis) {
 }
 
 function renderStandaloneResponse(response) {
+  state.currentAnalysis = null;
+  setViewState(response?.metadata?.fallbackUsed ? "fallback-used" : "success");
   els.actionBar.classList.add("hidden");
   const cards = Array.isArray(response?.cards) ? response.cards : [];
 
@@ -552,6 +742,9 @@ function renderStandaloneResponse(response) {
         <div>
           <p class="eyebrow">mygpt response</p>
           <h2>${escapeHtml(response?.taskType || "Assistant result")}</h2>
+        </div>
+        <div class="badge-row">
+          ${compact(response?.metadata?.userVisibleBadges || []).map((badge) => `<span class="meta-badge">${escapeHtml(badge)}</span>`).join("")}
         </div>
       </div>
       <p>${escapeHtml(response?.reply || "mygpt returned a quick response.")}</p>
@@ -762,6 +955,13 @@ async function handleResumeSubmit(event) {
     return;
   }
 
+  const saveRequested = els.resumeSave.checked;
+  const save = normalizeGuestSaveRequest(
+    saveRequested,
+    "Guest mode can analyze resumes, but saving profiles requires sign-in.",
+    els.resumeSave
+  );
+
   const formData = new FormData();
   formData.append("resume", file);
   formData.append("role", els.resumeRole.value);
@@ -769,28 +969,51 @@ async function handleResumeSubmit(event) {
   formData.append("location", els.resumeLocation.value);
   formData.append("jobUrl", els.resumeJobUrl.value);
   formData.append("forceRefresh", String(els.resumeForceRefresh.checked));
-  formData.append("save", String(els.resumeSave.checked));
+  formData.append("save", String(save));
 
   if (isOwner() && getAdvancedProvider()) {
     formData.append("advancedProvider", getAdvancedProvider());
   }
 
+  beginBusy("resume", "Analyzing...", els.resumeSubmit);
+  renderResultsState(
+    "Analyzing your resume",
+    "InterviewPal is parsing the file in memory, extracting student-ready signals, and assembling fresh company and job context.",
+    "loading"
+  );
   setStatus("Analyzing your resume locally and assembling fresh context...", "");
 
-  const response = await apiFetch("/api/analyze-resume", {
-    method: "POST",
-    formData
-  });
+  let nextView = "idle";
 
-  state.sessionCandidateProfile = response.candidate || null;
-  state.sessionCandidateProfileId = response.savedProfileId || "";
-  updateSessionNote();
-  renderAnalysis(response);
-  appendThreadMessage("assistant", response.summary?.reportSummary || response.summary?.fitSnapshot || "Resume analysis is ready.", computeBadges(response));
-  if (response.savedProfileId && state.user) {
-    await refreshWorkspaceLists();
+  try {
+    const response = await apiFetch("/api/analyze-resume", {
+      method: "POST",
+      formData
+    });
+
+    state.sessionCandidateProfile = response.candidate || null;
+    state.sessionCandidateProfileId = response.savedProfileId || "";
+    updateSessionNote();
+    renderAnalysis(response);
+    appendThreadMessage("assistant", response.summary?.reportSummary || response.summary?.fitSnapshot || "Resume analysis is ready.", computeBadges(response));
+    if (response.savedProfileId && state.user) {
+      await refreshWorkspaceLists();
+    }
+    nextView = response?.metadata?.fallbackUsed ? "fallback-used" : "success";
+    setStatus(
+      saveRequested && !save
+        ? "Resume analyzed securely in memory. Sign in if you want to save this profile to your workspace."
+        : "Resume analyzed securely in memory. The raw file has been discarded.",
+      "success"
+    );
+    return response;
+  } catch (error) {
+    nextView = "validation-error";
+    renderResultsState("Resume analysis needs attention", error.message, "error");
+    throw error;
+  } finally {
+    endBusy(nextView);
   }
-  setStatus("Resume analyzed securely in memory. The raw file has been discarded.", "success");
 }
 
 function buildSharedAnalysisBody({ role, company, location, jobUrl, save, forceRefresh, includeSessionProfile }) {
@@ -814,9 +1037,32 @@ function buildSharedAnalysisBody({ role, company, location, jobUrl, save, forceR
   return body;
 }
 
+function normalizeGuestSaveRequest(saveRequested, message, checkbox = null) {
+  if (!saveRequested || state.user) {
+    return saveRequested;
+  }
+
+  if (checkbox) {
+    checkbox.checked = false;
+  }
+  setStatus(message, "warning");
+  return false;
+}
+
 async function handleJobSearchSubmit(event) {
   event.preventDefault();
-
+  const saveRequested = els.jobsSave.checked;
+  const save = normalizeGuestSaveRequest(
+    saveRequested,
+    "Guest mode can still search jobs, but saving searches requires sign-in.",
+    els.jobsSave
+  );
+  beginBusy("jobs", "Searching...", els.jobsSubmit);
+  renderResultsState(
+    "Searching live jobs",
+    "InterviewPal is checking official ATS and company sources first, then falling back gracefully if live coverage is weak.",
+    "loading"
+  );
   setStatus("Searching live jobs and internships through official ATS-first sources...", "");
 
   const body = buildSharedAnalysisBody({
@@ -824,27 +1070,55 @@ async function handleJobSearchSubmit(event) {
     company: els.jobsCompany.value,
     location: els.jobsLocation.value,
     jobUrl: els.jobsJobUrl.value,
-    save: els.jobsSave.checked,
+    save,
     forceRefresh: els.jobsForceRefresh.checked,
     includeSessionProfile: els.jobsUseSessionProfile.checked
   });
 
-  const response = await apiFetch("/api/jobs/search", {
-    method: "POST",
-    body
-  });
+  let nextView = "idle";
 
-  renderAnalysis(response);
-  appendThreadMessage("assistant", response.summary?.reportSummary || response.summary?.fitSnapshot || "Live jobs are ready.", computeBadges(response));
-  if (response.savedSearchId && state.user) {
-    await refreshWorkspaceLists();
+  try {
+    const response = await apiFetch("/api/jobs/search", {
+      method: "POST",
+      body
+    });
+
+    renderAnalysis(response);
+    appendThreadMessage("assistant", response.summary?.reportSummary || response.summary?.fitSnapshot || "Live jobs are ready.", computeBadges(response));
+    if (response.savedSearchId && state.user) {
+      await refreshWorkspaceLists();
+    }
+    nextView = response?.metadata?.fallbackUsed ? "fallback-used" : "success";
+    setStatus(
+      saveRequested && !save
+        ? "Live job search complete. Sign in if you want to save this search."
+        : "Live job search complete. Freshness and fallback status are visible in the results.",
+      "success"
+    );
+    return response;
+  } catch (error) {
+    nextView = "validation-error";
+    renderResultsState("Job search needs attention", error.message, "error");
+    throw error;
+  } finally {
+    endBusy(nextView);
   }
-  setStatus("Live job search complete. Freshness and fallback status are visible in the results.", "success");
 }
 
 async function handlePrepSubmit(event) {
   event.preventDefault();
-
+  const saveRequested = els.prepSave.checked;
+  const save = normalizeGuestSaveRequest(
+    saveRequested,
+    "Guest mode can generate prep, but saving prep sessions requires sign-in.",
+    els.prepSave
+  );
+  beginBusy("prep", "Preparing...", els.prepSubmit);
+  renderResultsState(
+    "Preparing your interview plan",
+    "mygpt is assembling deterministic signals, live context, and validated local output before rendering the prep cards.",
+    "loading"
+  );
   setStatus("Generating company-aware interview prep with mygpt and deterministic scoring...", "");
 
   const body = buildSharedAnalysisBody({
@@ -852,42 +1126,75 @@ async function handlePrepSubmit(event) {
     company: els.prepCompany.value,
     location: els.prepLocation.value,
     jobUrl: els.prepJobUrl.value,
-    save: els.prepSave.checked,
+    save,
     forceRefresh: els.prepForceRefresh.checked,
     includeSessionProfile: els.prepUseSessionProfile.checked
   });
   body.focusArea = els.prepFocusArea.value;
 
-  const response = await apiFetch("/api/prep", {
-    method: "POST",
-    body
-  });
+  let nextView = "idle";
 
-  renderAnalysis(response);
-  appendThreadMessage("assistant", response.summary?.reportSummary || response.summary?.fitSnapshot || "Prep is ready.", computeBadges(response));
-  if (response.savedPrepId && state.user) {
-    await refreshWorkspaceLists();
+  try {
+    const response = await apiFetch("/api/prep", {
+      method: "POST",
+      body
+    });
+
+    renderAnalysis(response);
+    appendThreadMessage("assistant", response.summary?.reportSummary || response.summary?.fitSnapshot || "Prep is ready.", computeBadges(response));
+    if (response.savedPrepId && state.user) {
+      await refreshWorkspaceLists();
+    }
+    nextView = response?.metadata?.fallbackUsed ? "fallback-used" : "success";
+    setStatus(
+      saveRequested && !save
+        ? "Interview prep generated. Sign in if you want to save this prep session."
+        : "Interview prep generated. mygpt used the local stack and deterministic fallback logic where needed.",
+      "success"
+    );
+    return response;
+  } catch (error) {
+    nextView = "validation-error";
+    renderResultsState("Prep generation needs attention", error.message, "error");
+    throw error;
+  } finally {
+    endBusy(nextView);
   }
-  setStatus("Interview prep generated. mygpt used the local stack and deterministic fallback logic where needed.", "success");
 }
 
-async function handleAssistantSubmit(event) {
-  event.preventDefault();
-
-  const message = String(els.assistantMessage.value || "").trim();
-  if (!message) {
+async function runAssistantRequest({ message, preset = "", triggerButton = null, threadLabel = "" } = {}) {
+  const trimmedMessage = String(message || "").trim();
+  if (!trimmedMessage && !preset) {
     setStatus("Type a request for mygpt first.", "warning");
     return;
   }
 
-  appendThreadMessage("user", message);
-  els.assistantMessage.value = "";
+  const saveRequested = els.assistantSave.checked;
+  const save = normalizeGuestSaveRequest(
+    saveRequested,
+    "Guest mode can use mygpt, but saving assistant-driven workspace items requires sign-in.",
+    els.assistantSave
+  );
+  const userTurn = threadLabel || trimmedMessage || (triggerButton?.textContent || "Quick action");
+  appendThreadMessage("user", userTurn);
+  clearPendingAssistantMessage();
+  appendPendingAssistantMessage(preset ? `Running ${userTurn.toLowerCase()}...` : "mygpt is working on your request...");
+  if (!preset) {
+    els.assistantMessage.value = "";
+  }
+  beginBusy("assistant", preset ? "Running..." : "Thinking...", triggerButton || els.assistantSubmit);
+  renderResultsState(
+    "Working on it",
+    "mygpt is routing the request through deterministic parsing, live context assembly, and validated local generation.",
+    "loading"
+  );
   setStatus("mygpt is routing your request through the local career stack...", "");
 
   const body = {
-    message,
+    message: trimmedMessage,
+    preset,
     forceRefresh: els.assistantForceRefresh.checked,
-    save: els.assistantSave.checked
+    save
   };
 
   if (els.assistantUseSessionProfile.checked && state.sessionCandidateProfile) {
@@ -898,22 +1205,51 @@ async function handleAssistantSubmit(event) {
     body.advancedProvider = getAdvancedProvider();
   }
 
-  const response = await apiFetch("/api/assistant/turn", {
-    method: "POST",
-    body
-  });
+  let nextView = "idle";
 
-  applyResponse(response);
-  if (response.analysis?.savedByAssistantId && state.user) {
-    await refreshWorkspaceLists();
+  try {
+    const response = await apiFetch("/api/assistant/turn", {
+      method: "POST",
+      body
+    });
+
+    clearPendingAssistantMessage();
+    applyResponse(response);
+    if (response.analysis?.savedByAssistantId && state.user) {
+      await refreshWorkspaceLists();
+    }
+    nextView = response?.metadata?.fallbackUsed ? "fallback-used" : "success";
+    setStatus(
+      saveRequested && !save
+        ? "Assistant turn completed. Sign in if you want to save assistant-driven results."
+        : "Assistant turn completed. Invalid local generations are filtered before they reach the UI.",
+      "success"
+    );
+    return response;
+  } catch (error) {
+    nextView = "validation-error";
+    clearPendingAssistantMessage();
+    renderResultsState("Request needs attention", error.message, "error");
+    throw error;
+  } finally {
+    endBusy(nextView);
   }
-  setStatus("Assistant turn completed. Invalid local generations are filtered before they reach the UI.", "success");
+}
+
+async function handleAssistantSubmit(event) {
+  event.preventDefault();
+  return runAssistantRequest({
+    message: els.assistantMessage.value,
+    preset: "",
+    triggerButton: els.assistantSubmit
+  });
 }
 
 async function loadSavedItem(kind, id) {
   const item = await apiFetch(`/api/saved/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`);
   if (item?.payload?.candidate) {
     state.sessionCandidateProfile = item.payload.candidate;
+    state.sessionCandidateProfileId = item.id;
   }
   updateSessionNote();
   renderAnalysis(item.payload);
@@ -927,31 +1263,44 @@ async function requestReport(format, save) {
     return;
   }
 
-  const response = await apiFetch("/api/reports", {
-    method: "POST",
-    body: {
-      payload: state.currentAnalysis,
-      format,
-      save,
-      title: state.currentAnalysis.summary?.headline || "InterviewPal report"
-    }
-  });
-
-  if (save) {
-    if (state.user) {
-      await refreshWorkspaceLists();
-    }
-    setStatus("Report saved to your secure workspace.", "success");
-    if (response.downloadUrl) {
-      openDownload(response.downloadUrl);
-    }
+  if (save && !state.user) {
+    setStatus("Sign in to save downloadable reports to your secure workspace.", "warning");
     return;
   }
 
-  if (response.downloadUrl) {
-    openDownload(response.downloadUrl);
+  const busyContext = save ? "report-save" : format === "json" ? "report-json" : "report-pdf";
+  const busyLabel = save ? "Saving..." : format === "json" ? "Preparing JSON..." : "Preparing PDF...";
+  beginBusy(busyContext, busyLabel, save ? els.saveReport : format === "json" ? els.downloadJson : els.downloadPdf);
+
+  try {
+    const response = await apiFetch("/api/reports", {
+      method: "POST",
+      body: {
+        payload: state.currentAnalysis,
+        format,
+        save,
+        title: state.currentAnalysis.summary?.headline || "InterviewPal report"
+      }
+    });
+
+    if (save) {
+      if (state.user) {
+        await refreshWorkspaceLists();
+      }
+      setStatus("Report saved to your secure workspace.", "success");
+      if (response.downloadUrl) {
+        openDownload(response.downloadUrl);
+      }
+      return;
+    }
+
+    if (response.downloadUrl) {
+      openDownload(response.downloadUrl);
+    }
+    setStatus(`Prepared ${format.toUpperCase()} report download.`, "success");
+  } finally {
+    endBusy(state.currentAnalysis ? "success" : "idle");
   }
-  setStatus(`Prepared ${format.toUpperCase()} report download.`, "success");
 }
 
 function bindEvents() {
@@ -1064,14 +1413,23 @@ function bindEvents() {
     }
   });
 
-  els.quickPrompts.addEventListener("click", (event) => {
+  els.quickPrompts.addEventListener("click", async (event) => {
     const button = event.target.closest(".quick-prompt");
     if (!button) {
       return;
     }
 
-    els.assistantMessage.value = button.dataset.prompt || "";
-    els.assistantMessage.focus();
+    try {
+      await runAssistantRequest({
+        message: button.dataset.prompt || "",
+        preset: button.dataset.preset || "",
+        triggerButton: button,
+        threadLabel: button.textContent.trim()
+      });
+    } catch (error) {
+      appendThreadMessage("assistant", `I hit an issue: ${error.message}`);
+      setStatus(error.message, "warning");
+    }
   });
 
   document.addEventListener("click", async (event) => {
@@ -1134,6 +1492,13 @@ async function bootstrap() {
   bindEvents();
   updateSessionNote();
   els.actionBar.classList.add("hidden");
+  setViewState("idle");
+  syncBusyUi();
+  renderResultsState(
+    "Structured local intelligence",
+    "Ask mygpt for jobs, prep, bullet rewrites, or workspace help to see scorecards, live openings, company context, and secure report exports.",
+    "empty"
+  );
 
   try {
     state.defaultProfile = await apiFetch("/api/profile");

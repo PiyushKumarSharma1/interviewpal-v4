@@ -240,8 +240,14 @@ function getAnalysisTitle(prefix, analysis) {
 }
 
 async function maybeSaveAnalysis(req, kind, analysis, saveRequested) {
-  if (!saveRequested || !req.session.userId) {
+  if (!saveRequested) {
     return "";
+  }
+
+  if (!req.session.userId) {
+    const error = new Error("Please sign in to save workspace items.");
+    error.statusCode = 401;
+    throw error;
   }
 
   return saveWorkspaceItem(req.session.userId, kind, getAnalysisTitle(kind, analysis), analysis);
@@ -765,6 +771,7 @@ app.post("/api/assistant/turn", async (req, res) => {
     const response = await routeAssistantTurn({
       rootDir,
       message: req.body?.message,
+      preset: req.body?.preset,
       candidateProfile,
       candidateProfileId: req.body?.candidateProfileId,
       savedItemId: req.body?.savedItemId,
@@ -788,7 +795,7 @@ app.post("/api/assistant/turn", async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    res.status(400).json({ error: error.message || "Assistant request failed." });
+    res.status(error.statusCode || 400).json({ error: error.message || "Assistant request failed." });
   }
 });
 
@@ -815,7 +822,7 @@ app.post("/api/jobs/search", async (req, res) => {
       savedSearchId
     });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Failed to search live jobs." });
+    res.status(error.statusCode || 400).json({ error: error.message || "Failed to search live jobs." });
   }
 });
 
@@ -861,7 +868,7 @@ app.post("/api/prep", async (req, res) => {
       savedPrepId
     });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Failed to generate interview prep." });
+    res.status(error.statusCode || 400).json({ error: error.message || "Failed to generate interview prep." });
   }
 });
 
@@ -902,7 +909,7 @@ app.post("/api/analyze-resume", upload.single("resume"), async (req, res) => {
       extractionMode: parsed.extractionMode
     });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Failed to analyze resume." });
+    res.status(error.statusCode || 400).json({ error: error.message || "Failed to analyze resume." });
   } finally {
     wipeBuffer(fileBuffer);
   }
@@ -948,7 +955,7 @@ app.post("/api/reports", async (req, res) => {
       downloadUrl: `/api/reports/download/${token}?format=${format}`
     });
   } catch (error) {
-    res.status(400).json({ error: error.message || "Failed to prepare the report." });
+    res.status(error.statusCode || 400).json({ error: error.message || "Failed to prepare the report." });
   }
 });
 
@@ -976,7 +983,7 @@ app.use((error, req, res, next) => {
   }
 
   if (error) {
-    res.status(400).json({ error: error.message || "Request failed." });
+    res.status(error.statusCode || 400).json({ error: error.message || "Request failed." });
     return;
   }
 

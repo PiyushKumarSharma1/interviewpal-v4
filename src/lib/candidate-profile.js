@@ -2,7 +2,8 @@ const { profile } = require("../data/profile");
 const { flattenTaxonomy, normalizeText } = require("./keywords");
 
 function uniqueCompact(values) {
-  return [...new Set((values || []).map((value) => String(value || "").trim()).filter(Boolean))];
+  const list = Array.isArray(values) ? values : [];
+  return [...new Set(list.map((value) => String(value || "").trim()).filter(Boolean))];
 }
 
 function toSafeArray(values) {

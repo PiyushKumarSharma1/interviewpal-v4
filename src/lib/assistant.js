@@ -3,6 +3,33 @@ const { generateMyGPTTask } = require("./mygpt");
 const { normalizeText } = require("./keywords");
 const { recordDiagnostic } = require("./diagnostics");
 
+const PRESET_CONFIG = {
+  google_internships: {
+    taskType: "job_search",
+    message: "Find me software engineering internships at Google.",
+    role: "Software Engineer Intern",
+    company: "Google",
+    focusArea: "Live internship search and company-aware targeting",
+    allowDefaultProfile: true
+  },
+  openai_prep: {
+    taskType: "prep_brief",
+    message: "Prep me for a software engineer intern interview at OpenAI.",
+    role: "Software Engineer Intern",
+    company: "OpenAI",
+    focusArea: "Interview prep, behavioral stories, and company targeting",
+    allowDefaultProfile: true
+  },
+  rewrite_resume_bullet: {
+    taskType: "rewrite_bullet",
+    message: "Rewrite this resume bullet to sound stronger: Built a React dashboard for interview prep.",
+    role: "Software Engineer Intern",
+    company: "",
+    originalBullet: "Built a React dashboard for interview prep.",
+    allowDefaultProfile: true
+  }
+};
+
 function cleanInput(value, maxLength = 240) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
@@ -161,6 +188,7 @@ async function buildAssistantReply(rootDir, taskType, analysis, extras = {}) {
 async function routeAssistantTurn({
   rootDir,
   message,
+  preset,
   candidateProfile,
   candidateProfileId,
   savedItemId,
@@ -174,21 +202,37 @@ async function routeAssistantTurn({
   buildAnalysisResponse,
   workspace
 }) {
-  const taskType = detectIntent(message);
-  const inferredRole = cleanInput(role || inferRole(message), 120);
-  const inferredCompany = cleanInput(company || inferCompany(message), 120);
-  const inferredLocation = cleanInput(location || inferLocation(message), 120);
+  const presetKey = cleanInput(preset, 80);
+  const presetConfig = PRESET_CONFIG[presetKey] || null;
+  const effectiveMessage = cleanInput(message || presetConfig?.message || "", 400);
+  const taskType = presetConfig?.taskType || detectIntent(effectiveMessage);
+  const inferredRole = cleanInput(role || presetConfig?.role || inferRole(effectiveMessage), 120);
+  const inferredCompany = cleanInput(company || presetConfig?.company || inferCompany(effectiveMessage), 120);
+  const inferredLocation = cleanInput(location || inferLocation(effectiveMessage), 120);
+  const inferredFocusArea = cleanInput(
+    presetConfig?.focusArea ||
+      (
+        taskType === "job_search"
+          ? "Live internship and job search"
+          : taskType === "resume_review"
+            ? "Resume review and internship readiness"
+            : "Interview prep, questions, and company targeting"
+      ),
+    160
+  );
   const normalizedCandidate = candidateProfile ? normalizeCandidateProfile(candidateProfile) : null;
 
   recordDiagnostic({
     type: "info",
     scope: "assistant",
     taskType,
-    note: `Natural-language request routed: ${cleanInput(message, 180)}`
+    note: presetConfig
+      ? `Assistant preset routed: ${presetKey}`
+      : `Natural-language request routed: ${cleanInput(effectiveMessage, 180)}`
   });
 
   if (taskType === "rewrite_bullet") {
-    const originalBullet = extractBulletText(message);
+    const originalBullet = extractBulletText(effectiveMessage) || cleanInput(presetConfig?.originalBullet, 260);
     const rewrite = await buildAssistantReply(rootDir, "rewrite_bullet", null, {
       originalBullet,
       role: inferredRole,
@@ -209,7 +253,9 @@ async function routeAssistantTurn({
         modelVersion: rewrite.modelVersion,
         validationState: rewrite.validationState,
         fallbackUsed: rewrite.fallbackUsed,
-        actualProvider: rewrite.actualProvider
+        actualProvider: rewrite.actualProvider,
+        preset: presetKey || "",
+        userVisibleBadges: compact(["mygpt local", rewrite.fallbackUsed ? "fallback used" : ""])
       }
     };
   }
@@ -226,7 +272,9 @@ async function routeAssistantTurn({
       metadata: {
         engine: "mygpt",
         validationState: "deterministic",
-        fallbackUsed: false
+        fallbackUsed: false,
+        preset: presetKey || "",
+        userVisibleBadges: ["mygpt local"]
       }
     };
   }
@@ -240,7 +288,9 @@ async function routeAssistantTurn({
         metadata: {
           engine: "mygpt",
           validationState: "deterministic",
-          fallbackUsed: false
+          fallbackUsed: false,
+          preset: presetKey || "",
+          userVisibleBadges: ["mygpt local"]
         }
       };
     }
@@ -258,7 +308,8 @@ async function routeAssistantTurn({
         metadata: {
           engine: "mygpt",
           validationState: "deterministic",
-          fallbackUsed: false
+          fallbackUsed: false,
+          preset: presetKey || ""
         }
       };
     }
@@ -275,7 +326,9 @@ async function routeAssistantTurn({
       metadata: {
         engine: "mygpt",
         validationState: "deterministic",
-        fallbackUsed: false
+        fallbackUsed: false,
+        preset: presetKey || "",
+        userVisibleBadges: ["mygpt local"]
       }
     };
   }
@@ -292,7 +345,9 @@ async function routeAssistantTurn({
       metadata: {
         engine: "mygpt",
         validationState: "deterministic",
-        fallbackUsed: false
+        fallbackUsed: false,
+        preset: presetKey || "",
+        userVisibleBadges: ["mygpt local"]
       }
     };
   }
@@ -301,25 +356,22 @@ async function routeAssistantTurn({
     role: inferredRole,
     company: inferredCompany,
     location: inferredLocation,
-    focusArea:
-      taskType === "job_search"
-        ? "Live internship and job search"
-        : taskType === "resume_review"
-          ? "Resume review and internship readiness"
-          : "Interview prep, questions, and company targeting",
+    focusArea: inferredFocusArea,
     jobUrl: jobUrl || "",
     advancedProvider,
     candidateProfile: normalizedCandidate,
     candidateProfileId,
     analysisMode: normalizedCandidate ? "assistant-session-profile" : candidateProfileId ? "assistant-saved-profile" : "assistant-default-profile",
-    note: "Natural-language request routed through mygpt.",
+    note: presetConfig
+      ? `Preset ${presetKey} routed through mygpt.`
+      : "Natural-language request routed through mygpt.",
     forceRefresh,
     taskType
   });
 
   let replyTask = "coaching_note";
   if (taskType === "job_search") {
-    replyTask = "next_actions";
+    replyTask = "report_polish";
   } else if (taskType === "prep_brief") {
     replyTask = "coaching_note";
   } else if (taskType === "career_coach") {
@@ -345,6 +397,7 @@ async function routeAssistantTurn({
   analysis.metadata.actualProvider = assistantReply.actualProvider;
   analysis.metadata.taskType = taskType;
   analysis.metadata.userVisibleBadges = buildFriendlyBadges(analysis);
+  analysis.metadata.preset = presetKey || "";
 
   return {
     taskType,
@@ -361,12 +414,14 @@ async function routeAssistantTurn({
       validationState: assistantReply.validationState,
       fallbackUsed: assistantReply.fallbackUsed,
       actualProvider: assistantReply.actualProvider,
-      userVisibleBadges: buildFriendlyBadges(analysis)
+      userVisibleBadges: buildFriendlyBadges(analysis),
+      preset: presetKey || ""
     }
   };
 }
 
 module.exports = {
   detectIntent,
+  PRESET_CONFIG,
   routeAssistantTurn
 };

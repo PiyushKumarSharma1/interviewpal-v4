@@ -250,6 +250,14 @@ function cleanGeneratedText(text, maxChars) {
     .slice(0, maxChars || 280);
 }
 
+function cleanClause(value, maxChars = 260) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .replace(/[.!,;:]+$/g, "")
+    .trim()
+    .slice(0, maxChars);
+}
+
 function validateMyGPTText(taskType, text) {
   const schema = TASK_SCHEMAS[taskType] || TASK_SCHEMAS.coaching_note;
   const cleaned = cleanGeneratedText(text, schema.maxChars);
@@ -293,12 +301,24 @@ function buildFallbackTaskResult(taskType, packet) {
         "Practice a concise project walkthrough.",
         "Align your resume language to the target role."
       ]).join("\n");
-    case "report_polish":
-      return packet.summary || "This report combines resume analysis, job-fit signals, and company-aware preparation into a private local-first workflow.";
+    case "report_polish": {
+      const cleanedSummary = cleanClause(packet.summary);
+      const cleanedRisk = cleanClause(packet.topRisk);
+
+      if (!cleanedSummary) {
+        return "This report combines resume analysis, job-fit signals, and company-aware preparation into a private local-first workflow.";
+      }
+
+      if (cleanedRisk && !/biggest risk|top risk/i.test(cleanedSummary)) {
+        return `${cleanedSummary}. The next improvement is to tighten ${cleanedRisk.toLowerCase()}.`;
+      }
+
+      return `${cleanedSummary}.`;
+    }
     case "coaching_note":
     default:
-      return packet.topRisk
-        ? `You are positioned well for ${packet.targetRole || "internship"} opportunities. Strengthen your next pass by addressing ${packet.topRisk.toLowerCase()} and leading with your best project evidence.`
+      return cleanClause(packet.topRisk)
+        ? `You are positioned well for ${packet.targetRole || "internship"} opportunities. Strengthen your next pass by addressing ${cleanClause(packet.topRisk).toLowerCase()} and leading with your best project evidence.`
         : `You are positioned well for ${packet.targetRole || "internship"} opportunities. Lead with your strongest project, show measurable impact, and make the fit story tighter.`;
   }
 }

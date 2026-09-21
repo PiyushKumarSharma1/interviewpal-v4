@@ -15,28 +15,34 @@ function compact(values) {
 
 function collectBullets(candidate) {
   return [
-    ...candidate.projects.flatMap((item) => item.highlights || []),
-    ...candidate.experience.flatMap((item) => item.bullets || [])
+    ...toSafeList(candidate.projects).flatMap((item) => item.highlights || []),
+    ...toSafeList(candidate.experience).flatMap((item) => item.bullets || [])
   ].filter(Boolean);
 }
 
+function toSafeList(values) {
+  return Array.isArray(values) ? values : [];
+}
+
 function detectEducationLevel(candidate) {
-  const degree = `${candidate.education[0]?.degree || ""}`.toLowerCase();
+  const education = toSafeList(candidate.education);
+  const degree = `${education[0]?.degree || ""}`.toLowerCase();
 
   if (degree.includes("phd") || degree.includes("doctor")) return "doctoral";
   if (degree.includes("master") || degree.includes("m.s") || degree.includes("ms")) return "masters";
   if (degree.includes("bachelor") || degree.includes("b.s") || degree.includes("bs")) return "bachelors";
-  if (candidate.education.length) return "student";
+  if (education.length) return "student";
   return "unknown";
 }
 
 function graduationTiming(candidate) {
-  const graduation = candidate.education[0]?.graduation || "";
+  const education = toSafeList(candidate.education);
+  const graduation = education[0]?.graduation || "";
   const match = graduation.match(/\b(20\d{2})\b/);
 
   if (!match) {
     return {
-      label: candidate.education.length ? "in progress" : "unknown",
+      label: education.length ? "in progress" : "unknown",
       year: null
     };
   }
@@ -86,7 +92,15 @@ function collectEvidence(candidate, predicate) {
   return collectBullets(candidate).filter((bullet) => predicate(bullet)).slice(0, 5);
 }
 
-function extractCandidateSignals({ candidate, role, targetJob, location }) {
+function extractCandidateSignals(first, roleArg, targetJobArg, locationArg) {
+  const options = first && typeof first === "object" && first.candidate !== undefined
+    ? first
+    : { candidate: first, role: roleArg, targetJob: targetJobArg, location: locationArg };
+  const { candidate = {}, role = roleArg, targetJob = targetJobArg, location = locationArg } = options;
+  const projects = toSafeList(candidate.projects);
+  const experience = toSafeList(candidate.experience);
+  const education = toSafeList(candidate.education);
+  const leadership = toSafeList(candidate.leadership);
   const skillSet = getCandidateSkillSet(candidate);
   const bullets = collectBullets(candidate);
   const impactVerbMatches = compact(
@@ -100,9 +114,9 @@ function extractCandidateSignals({ candidate, role, targetJob, location }) {
   const missingRoleKeywords = targetTokens.filter((token) => !skillSet.has(normalizeText(token))).slice(0, 8);
   const internshipRelevance = clamp(
     46 +
-      candidate.education.length * 10 +
-      candidate.projects.length * 8 +
-      candidate.experience.length * 8 +
+      education.length * 10 +
+      projects.length * 8 +
+      experience.length * 8 +
       Math.min(quantifiedBullets.length, 4) * 5,
     0,
     100
@@ -130,10 +144,10 @@ function extractCandidateSignals({ candidate, role, targetJob, location }) {
     missingRoleKeywords,
     roleFamilyMatch: roleFamilyMatch(role, skillSet),
     studentPositioningSignals: compact([
-      candidate.education.length ? "education present" : "",
-      candidate.projects.length >= 2 ? "multiple projects" : "",
-      candidate.experience.length ? "work or internship history" : "",
-      candidate.leadership.length ? "leadership or extracurricular signal" : ""
+      education.length ? "education present" : "",
+      projects.length >= 2 ? "multiple projects" : "",
+      experience.length ? "work or internship history" : "",
+      leadership.length ? "leadership or extracurricular signal" : ""
     ]),
     collaborationEvidence,
     ownershipEvidence,
@@ -142,8 +156,8 @@ function extractCandidateSignals({ candidate, role, targetJob, location }) {
     seniorityMismatch,
     locationCompatibility,
     projectDepth: {
-      count: candidate.projects.length,
-      strongProjects: candidate.projects.filter((item) => (item.highlights || []).length >= 2).length
+      count: projects.length,
+      strongProjects: projects.filter((item) => (item.highlights || []).length >= 2).length
     }
   };
 }
