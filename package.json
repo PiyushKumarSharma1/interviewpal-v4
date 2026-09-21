@@ -2,9 +2,39 @@
   "name": "interviewpal",
   "version": "0.1.0",
   "private": true,
-  "description": "InterviewPal - a resume-driven interview preparation workspace.",
+  "description": "InterviewPal - a privacy-first local AI career copilot built around mygpt.",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test test/offline.test.js",
+    "build:mygpt-corpus": "python3 ml/build_task_corpus.py",
+    "train:mygpt": "python3 ml/build_task_corpus.py && python3 ml/train_mygpt.py",
+    "generate:mygpt": "python3 ml/generate_mygpt.py --prompt \"Piyush\"",
+    "eval:mygpt": "node scripts/run_mygpt_evals.js",
+    "promote:mygpt": "node scripts/promote_mygpt_checkpoint.js"
+  },
+  "main": "server.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "cheerio": "^1.2.0",
+    "connect-sqlite3": "^0.9.16",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "express-session": "^1.19.0",
+    "mammoth": "^1.12.0",
+    "multer": "^2.1.1",
+    "openai": "^6.27.0",
+    "pdf-parse": "^2.4.5",
+    "pdfkit": "^0.17.2",
+    "sqlite3": "^6.0.1",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
   }
 }
-

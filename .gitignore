@@ -1,4 +1,13 @@
 node_modules
 .DS_Store
 .env
-
+__pycache__
+.venv
+.pytest_cache
+model.pt
+storage
+evals/latest-summary.json
+model_versions/archive
+model_versions/promotions
+*.sqlite
+*.sqlite3

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "report-summary-swe",
+    "taskType": "report_polish",
+    "input": {
+      "targetRole": "Software Engineer Intern",
+      "company": "OpenAI",
+      "summary": "Strong student profile with full-stack project depth and clear growth potential.",
+      "topStrengths": ["project depth", "role-fit stack overlap", "student positioning"],
+      "topRisk": "ownership wording needs to be stronger"
+    },
+    "expectedKeywords": ["student", "project", "ownership"],
+    "mustReference": ["growth", "project"],
+    "forbiddenKeywords": ["you are mygpt", "output:"]
+  },
+  {
+    "id": "report-summary-backend",
+    "taskType": "report_polish",
+    "input": {
+      "targetRole": "Backend Engineer Intern",
+      "company": "Stripe",
+      "summary": "Good backend overlap with APIs, SQL, and Python, but reliability evidence is still light.",
+      "topStrengths": ["API design", "database work", "clear systems interest"],
+      "topRisk": "testing depth is under-expressed"
+    },
+    "expectedKeywords": ["backend", "API", "testing"],
+    "mustReference": ["backend", "testing"],
+    "forbiddenKeywords": ["### task", "input:"]
+  }
+]

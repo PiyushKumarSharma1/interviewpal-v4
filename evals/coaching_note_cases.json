@@ -1,0 +1,32 @@
+[
+  {
+    "id": "coaching-note-openai-swe",
+    "taskType": "coaching_note",
+    "input": {
+      "candidateName": "Piyush Kumar Sharma",
+      "targetRole": "Software Engineer Intern",
+      "company": "OpenAI",
+      "topStrengths": ["full-stack project depth", "clear student positioning", "visible Python and React stack"],
+      "topRisk": "missing stronger ownership wording",
+      "actions": ["tighten one project bullet", "add measurable impact", "practice a concise walkthrough"]
+    },
+    "expectedKeywords": ["project", "ownership", "impact"],
+    "mustReference": ["Software Engineer Intern", "ownership"],
+    "forbiddenKeywords": ["you are mygpt", "### task", "input:"]
+  },
+  {
+    "id": "coaching-note-frontend",
+    "taskType": "coaching_note",
+    "input": {
+      "candidateName": "Maya Chen",
+      "targetRole": "Frontend Engineer Intern",
+      "company": "Figma",
+      "topStrengths": ["React UI work", "product polish", "student positioning"],
+      "topRisk": "few quantified outcomes",
+      "actions": ["add one UI metric", "show collaboration", "prepare a design-to-code story"]
+    },
+    "expectedKeywords": ["frontend", "metric", "collaboration"],
+    "mustReference": ["Frontend Engineer Intern"],
+    "forbiddenKeywords": ["output:", "return only"]
+  }
+]

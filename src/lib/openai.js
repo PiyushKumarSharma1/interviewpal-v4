@@ -1,3 +1,5 @@
+const { candidateToPromptSummary } = require("./candidate-profile");
+
 function extractJson(text) {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
@@ -9,7 +11,49 @@ function extractJson(text) {
   return JSON.parse(text.slice(start, end + 1));
 }
 
-async function generatePrepWithOpenAI({ role, company, focusArea, profile, fallbackPrep }) {
+function mergeRefinement(baseAnalysis, refinement) {
+  if (!refinement || typeof refinement !== "object") {
+    return baseAnalysis;
+  }
+
+  return {
+    ...baseAnalysis,
+    summary: {
+      ...baseAnalysis.summary,
+      ...(refinement.summary || {})
+    },
+    resumeAnalysis: {
+      ...baseAnalysis.resumeAnalysis,
+      ...(refinement.resumeAnalysis || {})
+    },
+    jobSearchRecommendations: {
+      ...baseAnalysis.jobSearchRecommendations,
+      ...(refinement.jobSearchRecommendations || {})
+    },
+    recommendedQuestions: Array.isArray(refinement.recommendedQuestions)
+      ? refinement.recommendedQuestions
+      : baseAnalysis.recommendedQuestions,
+    resumeQuestions: Array.isArray(refinement.resumeQuestions)
+      ? refinement.resumeQuestions
+      : baseAnalysis.resumeQuestions,
+    jobQuestions: Array.isArray(refinement.jobQuestions)
+      ? refinement.jobQuestions
+      : baseAnalysis.jobQuestions,
+    metadata: {
+      ...baseAnalysis.metadata,
+      ...(refinement.metadata || {}),
+      provider: "openai"
+    }
+  };
+}
+
+async function refineAnalysisWithOpenAI({
+  role,
+  company,
+  focusArea,
+  candidateProfile,
+  baseAnalysis
+}) {
   const apiKey = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_MODEL;
 
@@ -18,19 +62,23 @@ async function generatePrepWithOpenAI({ role, company, focusArea, profile, fallb
   }
 
   const prompt = [
-    "You are InterviewPal, an interview coach for early-career software candidates.",
-    "Return only valid JSON with the same top-level shape as the provided fallback object.",
-    "Keep the response concise, practical, and personalized to the candidate profile.",
+    "You are an owner-only refinement step for InterviewPal's local mygpt workflow.",
+    "Return only valid JSON.",
+    "Do not change numeric scores, candidate identity fields, or company context sources.",
+    "Only refine tone and usefulness in summary, resumeAnalysis text arrays, recommendedQuestions, resumeQuestions, jobQuestions, jobSearchRecommendations, and metadata.note.",
+    "Stay concise, practical, privacy-conscious, and aligned with a student-built local-first product.",
     "",
     `Target role: ${role || "Software Engineer Intern"}`,
     `Target company: ${company || "Target Company"}`,
     `Focus area: ${focusArea || "Behavioral and project storytelling"}`,
     "",
-    "Candidate profile JSON:",
-    JSON.stringify(profile, null, 2),
+    "Candidate profile summary JSON:",
+    JSON.stringify(candidateToPromptSummary(candidateProfile), null, 2),
     "",
-    "Fallback structure to match:",
-    JSON.stringify(fallbackPrep, null, 2)
+    "Current grouped analysis JSON:",
+    JSON.stringify(baseAnalysis, null, 2),
+    "",
+    "Return the same grouped top-level shape."
   ].join("\n");
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -41,11 +89,11 @@ async function generatePrepWithOpenAI({ role, company, focusArea, profile, fallb
     },
     body: JSON.stringify({
       model,
-      temperature: 0.7,
+      temperature: 0.45,
       messages: [
         {
           role: "system",
-          content: "Return only JSON. Do not use markdown fences."
+          content: "Return only JSON. Never wrap the answer in markdown fences."
         },
         {
           role: "user",
@@ -68,11 +116,9 @@ async function generatePrepWithOpenAI({ role, company, focusArea, profile, fallb
   }
 
   const parsed = extractJson(content);
-  parsed.generatedAt = new Date().toISOString();
-  parsed.mode = "ai";
-
-  return parsed;
+  return mergeRefinement(baseAnalysis, parsed);
 }
 
-module.exports = { generatePrepWithOpenAI };
-
+module.exports = {
+  refineAnalysisWithOpenAI
+};

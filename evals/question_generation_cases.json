@@ -1,0 +1,30 @@
+[
+  {
+    "id": "question-generation-swe",
+    "taskType": "generate_questions",
+    "input": {
+      "targetRole": "Software Engineer Intern",
+      "company": "OpenAI",
+      "topProject": "InterviewPal",
+      "topRisk": "ownership wording is still light",
+      "strengths": ["full-stack execution", "clear student positioning", "React and FastAPI overlap"]
+    },
+    "expectedKeywords": ["InterviewPal", "ownership", "project"],
+    "mustReference": ["InterviewPal"],
+    "forbiddenKeywords": ["you are mygpt", "input:"]
+  },
+  {
+    "id": "question-generation-data",
+    "taskType": "generate_questions",
+    "input": {
+      "targetRole": "Data Science Intern",
+      "company": "Spotify",
+      "topProject": "Music trend recommender",
+      "topRisk": "model evaluation is not fully explained",
+      "strengths": ["Python", "SQL", "analytics mindset"]
+    },
+    "expectedKeywords": ["evaluation", "project", "model"],
+    "mustReference": ["Music trend recommender"],
+    "forbiddenKeywords": ["return only", "### task"]
+  }
+]

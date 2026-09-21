@@ -1,0 +1,28 @@
+[
+  {
+    "id": "rewrite-bullet-dashboard",
+    "taskType": "rewrite_bullet",
+    "input": {
+      "targetRole": "Software Engineer Intern",
+      "company": "OpenAI",
+      "originalBullet": "Built a React dashboard for interview prep.",
+      "missingSignals": ["technical specificity", "ownership wording", "impact"]
+    },
+    "expectedKeywords": ["React", "dashboard", "interview"],
+    "mustReference": ["React"],
+    "forbiddenKeywords": ["you are mygpt", "input:"]
+  },
+  {
+    "id": "rewrite-bullet-api",
+    "taskType": "rewrite_bullet",
+    "input": {
+      "targetRole": "Backend Engineer Intern",
+      "company": "Stripe",
+      "originalBullet": "Worked on APIs for a project.",
+      "missingSignals": ["scope", "design choices", "measurable result"]
+    },
+    "expectedKeywords": ["API", "design", "project"],
+    "mustReference": ["API"],
+    "forbiddenKeywords": ["### task", "output:"]
+  }
+]

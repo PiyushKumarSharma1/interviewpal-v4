@@ -1,0 +1,295 @@
+### TASK: coaching_note
+INPUT:
+actions:
+  - rewrite one project bullet with measurable impact
+  - add one ownership-forward bullet
+  - practice a concise project walkthrough
+candidateName: Piyush Kumar Sharma
+company: OpenAI
+targetRole: Software Engineer Intern
+topRisk: missing stronger ownership wording
+topStrengths:
+  - strong full-stack project depth
+  - clear student positioning
+  - visible Python, React, and SQL stack
+OUTPUT:
+You are already positioned well for software engineering internships. Tighten one project bullet with clearer ownership language, add a measurable outcome, and lead interviews with the project that best shows Python, React, and SQL working together.
+
+### TASK: coaching_note
+INPUT:
+actions:
+  - add one testing or observability bullet
+  - highlight API design tradeoffs
+  - connect coursework to backend fundamentals
+candidateName: Aarav Patel
+company: Stripe
+targetRole: Backend Engineer Intern
+topRisk: limited production reliability evidence
+topStrengths:
+  - API and database experience
+  - strong coursework foundation
+  - clear problem-solving examples
+OUTPUT:
+Your backend foundation is credible for internship roles. Strengthen the profile by showing one concrete testing or reliability example and by framing your API work around design tradeoffs, data modeling, and maintainability.
+
+### TASK: coaching_note
+INPUT:
+actions:
+  - rewrite one UI bullet with usage impact
+  - add collaboration evidence
+  - prepare a design-to-code story
+candidateName: Maya Chen
+company: Figma
+targetRole: Frontend Engineer Intern
+topRisk: few quantified outcomes
+topStrengths:
+  - strong React interface work
+  - good product intuition
+  - clear visual polish
+OUTPUT:
+You already read like a strong frontend intern candidate. Improve the next pass by quantifying one interface result, adding a collaboration example, and preparing a short story that connects design judgment to implementation detail.
+
+### TASK: coaching_note
+INPUT:
+actions:
+  - add one model evaluation bullet
+  - name the data pipeline tools
+  - practice explaining one experiment clearly
+candidateName: Jordan Lee
+company: Spotify
+targetRole: Data Science Intern
+topRisk: machine learning depth is under-explained
+topStrengths:
+  - Python and SQL overlap
+  - clear analytics coursework
+  - dashboard project evidence
+OUTPUT:
+Your analytics and Python foundation supports data science internships well. The biggest lift now is explaining one machine learning or experimentation project with clearer evaluation detail, tool choices, and business impact.
+
+### TASK: generate_questions
+INPUT:
+company: OpenAI
+strengths:
+  - full-stack execution
+  - clear student positioning
+  - React and FastAPI overlap
+targetRole: Software Engineer Intern
+topProject: InterviewPal
+topRisk: ownership wording is still light
+OUTPUT:
+Walk me through InterviewPal and the hardest technical decision you made.
+How would you explain your strongest full-stack project to a teammate who has never seen the codebase?
+What is one example where you took more ownership than your resume currently shows?
+
+### TASK: generate_questions
+INPUT:
+company: Stripe
+strengths:
+  - API design
+  - database modeling
+  - Python
+targetRole: Backend Engineer Intern
+topProject: Payments API clone
+topRisk: testing depth needs work
+OUTPUT:
+Tell me about the architecture of your payments API project.
+How did you model the data and what tradeoffs did you make?
+If you had another week, how would you improve testing and reliability?
+
+### TASK: generate_questions
+INPUT:
+company: Figma
+strengths:
+  - React component work
+  - product sense
+  - clean UI execution
+targetRole: Frontend Engineer Intern
+topProject: Design system dashboard
+topRisk: few measurable outcomes
+OUTPUT:
+Tell me about the component decisions behind your design system dashboard.
+How did you balance polish with implementation speed?
+What user or usability outcome would you highlight if you were shipping this in a real product team?
+
+### TASK: generate_questions
+INPUT:
+company: Spotify
+strengths:
+  - Python
+  - analytics mindset
+  - SQL
+targetRole: Data Science Intern
+topProject: Music trend recommender
+topRisk: model evaluation is not fully explained
+OUTPUT:
+Walk me through the recommender pipeline from data collection to evaluation.
+How did you decide whether the model was actually useful?
+What would you improve next if this were being prepared for production?
+
+### TASK: next_actions
+INPUT:
+actions:
+  - add quantified outcomes
+  - tighten project walkthrough
+  - mirror target role keywords truthfully
+targetRole: Software Engineer Intern
+topRisk: missing metrics in the top project bullets
+topStrengths:
+  - strong project depth
+  - clear student identity
+  - good stack overlap
+OUTPUT:
+Add one metric-backed bullet to your strongest project.
+Practice a 60-second walkthrough that connects the project to the internship role.
+Mirror the target role language only where it is already supported by your work.
+
+### TASK: next_actions
+INPUT:
+actions:
+  - add a testing bullet
+  - explain one system tradeoff
+  - highlight maintainability
+targetRole: Backend Engineer Intern
+topRisk: limited reliability and testing evidence
+topStrengths:
+  - API work
+  - databases
+  - clear coursework
+OUTPUT:
+Add one bullet showing tests, validation, or reliability work.
+Prepare a short backend tradeoff story around data modeling or API design.
+Use maintainability language to make your backend work feel more production-ready.
+
+### TASK: next_actions
+INPUT:
+actions:
+  - add one collaboration example
+  - quantify a UI improvement
+  - prepare a design-to-code story
+targetRole: Frontend Engineer Intern
+topRisk: collaboration evidence is weak
+topStrengths:
+  - React skills
+  - clean UI execution
+  - product intuition
+OUTPUT:
+Add one bullet that shows collaboration with design, product, or teammates.
+Quantify a UI improvement wherever you truthfully can.
+Practice a design-to-code story that explains your implementation choices clearly.
+
+### TASK: next_actions
+INPUT:
+actions:
+  - name the evaluation metric
+  - describe one experiment
+  - connect outputs to a user or business outcome
+targetRole: Data Science Intern
+topRisk: machine learning depth is still broad and generic
+topStrengths:
+  - Python
+  - SQL
+  - dashboards
+OUTPUT:
+Name the strongest evaluation metric from one ML or analytics project.
+Describe one experiment or iteration instead of summarizing the whole project broadly.
+Tie the output of the work to a concrete user, stakeholder, or business outcome.
+
+### TASK: report_polish
+INPUT:
+company: OpenAI
+summary: Strong student profile with full-stack project depth and clear growth potential.
+targetRole: Software Engineer Intern
+topRisk: ownership wording needs to be stronger
+topStrengths:
+  - project depth
+  - role-fit stack overlap
+  - student positioning
+OUTPUT:
+This profile is well positioned for software engineering internships because it combines visible student growth, practical full-stack project work, and a credible technical stack. The next improvement is to make ownership and measurable impact more explicit in the strongest bullets.
+
+### TASK: report_polish
+INPUT:
+company: Stripe
+summary: Good backend overlap with APIs, SQL, and Python, but reliability evidence is still light.
+targetRole: Backend Engineer Intern
+topRisk: testing depth is under-expressed
+topStrengths:
+  - API design
+  - database work
+  - clear systems interest
+OUTPUT:
+This candidate has credible backend internship potential with visible API, SQL, and Python experience. The clearest next step is to show more testing, reliability, and maintainability evidence so the profile feels more production-aware.
+
+### TASK: report_polish
+INPUT:
+company: Figma
+summary: React and UI polish are strong, but outcomes and collaboration can be clearer.
+targetRole: Frontend Engineer Intern
+topRisk: few quantified interface outcomes
+topStrengths:
+  - frontend depth
+  - clean user experience
+  - student-friendly narrative
+OUTPUT:
+This profile already reads as a strong frontend internship candidate because it shows hands-on React execution and thoughtful interface work. To make it more convincing, add measurable outcomes and one stronger collaboration example tied to product or design work.
+
+### TASK: report_polish
+INPUT:
+company: Spotify
+summary: Python, SQL, and analytics signals are strong, but ML evaluation stories need more structure.
+targetRole: Data Science Intern
+topRisk: machine learning depth is too general
+topStrengths:
+  - analytics readiness
+  - strong Python base
+  - clear data tooling
+OUTPUT:
+This candidate is well aligned for student data roles because the analytics and Python foundation is visible and practical. The biggest opportunity is to explain one model or experiment with clearer evaluation detail and stronger outcome framing.
+
+### TASK: rewrite_bullet
+INPUT:
+company: OpenAI
+missingSignals:
+  - ownership wording
+  - technical specificity
+  - impact
+originalBullet: Built a React dashboard for interview prep.
+targetRole: Software Engineer Intern
+OUTPUT:
+Built a React interview-prep dashboard that organized scorecards, role-specific question sets, and company research into one structured workflow, improving clarity and making practice sessions easier to navigate.
+
+### TASK: rewrite_bullet
+INPUT:
+company: Stripe
+missingSignals:
+  - scope
+  - design choices
+  - measurable result
+originalBullet: Worked on APIs for a project.
+targetRole: Backend Engineer Intern
+OUTPUT:
+Designed and implemented backend APIs for a project workflow, improving data access reliability and making the service easier to extend and test as new features were added.
+
+### TASK: rewrite_bullet
+INPUT:
+company: Airbnb
+missingSignals:
+  - tooling
+  - stakeholder value
+  - impact
+originalBullet: Made dashboards for reports.
+targetRole: Data Analyst Intern
+OUTPUT:
+Built reporting dashboards that translated raw operational data into clearer weekly insights, helping stakeholders track trends faster and make decisions with less manual analysis.
+
+### TASK: rewrite_bullet
+INPUT:
+company: Figma
+missingSignals:
+  - ownership wording
+  - technical stack
+  - outcome
+originalBullet: Helped with the UI.
+targetRole: Frontend Engineer Intern
+OUTPUT:
+Implemented UI improvements with React and reusable components, making the interface more consistent and easier for users to navigate across key product flows.
